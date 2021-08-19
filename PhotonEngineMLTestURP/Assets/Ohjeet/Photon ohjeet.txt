@@ -1,0 +1,188 @@
+Alkutietoa:
+Unityn poisti niiden vanhan multiplayer systeemin.
+Uusi systeemi on vasta versiossa v0.1.0
+Tämän vuoksi Photon Engine.
+
+Lisää tietoa Photon Engine ja Pun
+https://www.photonengine.com/en-US/PUN
+
+Huomioitavia asioita:
+Photon Enginen kanssa ei toimi Unityn uuden Input systeemin kanssa
+
+Tutoriaali:
+https://youtu.be/93SkbMpWCGo 
+
+1.
+
+Photon Engine:
+Ensimmäisenä täytyy käydä tekemässä tili: https://www.photonengine.com/
+
+-Tilin teko on ilmaista ja saa ilmaisen serverin.
+Jos on liikaa liikennettä servuun niin joutuu ottaa maksullisen
+version.
+
+2. 
+
+- Photonenginen sivuilla mene Dashboard.
+- Dashboard: CREATE A NEW APP
+- Seuraavaksi syötetään meidän "appin" tiedot
+	* Photon Type: PUN	
+	* Name: Projektin nimi (nimellä ei ole väliä)
+	* Description: Ei pakollinen
+	* URL: ei tarvitse koskea
+- Näitten jälkeen painetaan CREATE-nappia
+- Tämän jälkeen meidän servu on pystössä
+
+3.
+
+- Unity versio mahdollisimman uusi, mutta LTS versio.(Betassa ja Alphassa ei toimi Photon)
+- Luodaan unity projekti
+- jos aikoo tehdä WEBGL-build:in suosittelen joko normi projekti 3D tai 2D, myös URP pitäis käydä.
+
+4.
+
+- seuraava vaihe on käydä lataamassa photon asset storessa.
+- uudessa Unityssä ei pääse suoraan Asset Storeen vaan täytyy mennä selaimen kautta.
+- Asset Storesta täytyy ladata:
+https://assetstore.unity.com/packages/tools/network/pun-2-free-119922
+ 
+- täytyy olla unity tili, minne tallentuu tämä paketti
+- Sitten takaisin Unity projektiin ja sieltä Package Manager auki.(löytyy Window napin alta)
+- Package Managerista välilehti Packages: My Assets: haetaan listasta Pun 2 - Free
+- Valitse Pun 2 - Free ja paina Import-nappia
+- Importauksen jälkeen pitäisi aueta ikkuna nimeltä Pun Wizard unityn sisällä.
+- Tähän ikkunaan syötetään meidän serverin ID
+- Serverin ID:n löytää Photo Enginen sivuilta, Dashboard ja sieltä katotaan App ID: meidän luomasta servusta
+(Tämä ID näkyy harmaana niin voi olla vaiekaa huomiota.)
+- Kopioidaan ID dashboardilta ja sinne mennään takisin Unityyn ja liitetään tämä meidän id Pun Wizard ikkunassa olevaan kenttään
+- Sitten painetaan Setup Project-nappia PUN Wizard-ikkunasta
+
+
+5. 
+
+- Luodaan Loading Scene: Tämä Scene yhdistää meidät Photon Servulle.
+- luodaan Loading sceneen tyhjä peliobjekti ja nimetään se ConnectToServer.
+- luodaan uusi C# scripti nimeltä ConnectToServer ja liitetään tämä scripti Loading scenessä olevaan ConnecToServer- peliobjektiin.
+- Avataan ConnectToServer scripti.
+- Aina kun käytetään Photon Enginen ominaisuuksia meidän täytyy lisätä scriptiin ylös using Photon.Pun;
+
+
+using System.Collections.Generic;
+using UnityEngine;
+//päästään käsiksi Photon Engineen
+using Photon.Pun;
+//tällä ladataan unityn sisällä Scenejä
+using UnityEngine.SceneManagent;
+public class ConnectToServer : MonoBehaviourPunCallbacks
+{
+	private void Start()
+	{
+	//tämä yhdistää meidät photon servuun heti kun tämä kyseinen scene ladataan.
+	   PhotonNetwork.ConnectUsingSettings();
+	}
+
+	public override void OnConnectedToMaster()
+	{
+	// yhdistää meidät lobbyyn
+	   PhotonNetwork.JoinLobby();
+	}
+	
+	public override void OnJoinedLobby()
+	{
+	   //kun ollaan yhdistetty lobbyyn niin ladataan unityssä meidän
+	   //varsinainen lobby-scene. ""-merkkien sisään tulee scenen nimi.
+	   SceneManager.LoadScene("Lobby");
+	}
+
+}
+
+- muuta ei tarvitse tähän scriptiin
+
+6
+- Seuraavaksi meidän täytyy luoda Lobby-scene mikäli sellaista ei ole
+- Meidän täytyy käydä laittamassa Loading-scene ja lobby-scene building asetuksiin.
+
+7
+- Lobby-scenessä pääsee valitsemaan nimensä, liittymään huoneeseen tai luomaa huoneen
+- Luo ekana tyhjä peliobjekti Lobby-sceneen ja nimeä se CreateAndJoinRooms 
+- Luodaan C#-Scripti nimeltä: CreateAndJoinRooms ja annetaan se CreateAndJoinRooms - peliobjektille joka on Lobby-scenessä
+
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+//tämän avulla saadaan yhteys UI-elementteihin
+using UnityEngine.UI;
+using Photon.Pun;
+
+public class CreateAndJoinRooms : MonoBehaviourPunCallbacks
+{
+
+  // createInput:iin syötetään uuden huoneen nimi
+  // joinInput:iin syötetään olemassa olevan huoneen nimi
+  public InputField createInput;
+  public InputField joinInput;
+
+  //Tätä funktiota kutsutaan create-napilla. luo meille pelihuoneen
+  public void CreateRoom()
+  {
+	  // tällä käskyllä luodaan uusi huone ja sulkujen sisään tulee huoneen nimi
+	  // createInput sisältää meidän uuden huoneen nimen. Näin käyttäjä voi syöttää haluamansa nimen.
+	PhotonNetwork.CreateRoom(createInput.text);
+	
+  }
+  //  //Tätä funktiota kutsutaan join-napilla. liitytään olemassa olevaan  pelihuoneeseen
+  public void JoinRoom()
+  {
+	   // tällä käskyllä liitytään olemassa olevaan huoneeseen ja sulkujen sisään tulee huoneen nimi
+	  // joinInput sisältää meidän huoneen nimen. Näin käyttäjä voi syöttää haluamansa nimen.
+	  PhotonNetwork.JoinRoom(joinInput.text);
+	  
+  }
+  
+  //tätä kutsutaan automaattisesti kun pelaaja yhdistyy pelihuoneeseen
+  public override void OnJoinedRoom()
+  {
+		//meidän täytyy käyttää photonenginen omaa tapaa ladata  varsinainen peliscene
+		//lainausmerkkien sisään varsinaisen peli-scenen nimi. Esim Game
+		PhotonNetwork.LoadLevel("Game");
+  }
+  
+}
+
+8
+
+- Seuraava vaihe olisi rakentaa UI-kuntoon lobby-sceneen.
+- UI:n ja Canvas-objektinkanssa leikkiminen voi olla alkuun hankalaa,
+esim objektit täytyy ankkuroida sijanteihin ja kannattaa luodatyhjiä peliobjekteja
+minkä alle luo sitten esim napin ja inputfieldin.
+- UI-objekteilla on oma transforminsa joka toimii hassusti.
+- UI:n skaalaus on aika painajaista jos ei ole asetukset oikein. Lisään 
+myöhemmin kuvia/videon miten saa UI-asetukset kuntoon.
+
+- Tarvitset Canvas-objektin ja sen sisään seuraavat asiat.
+	* InputField ja nimeä se CreateInputField
+	* InputField ja nimeä se JoinInputField
+	* Button ja nimeä se Create-button
+	* Button ja nimeä se Join-button
+	
+- Tämän jälkeen asettele objektit siististi sceneen.
+
+9
+
+- Valitse scenestä CreateAndJoinRooms-peliobjekti. Vedä sinne 
+createInput kohtaan luomasi createInput-objekti
+- CreateAndJoinRooms-peliobjektissa Vedä sinne 
+JoinInput kohtaan luomasi JoineInput-objekti
+
+- Valitse Create-button ja lisää sinne alas CreateAndJoinRooms-peliobjekti ja valitse listasta CreateRoom() funtio
+- Sama homma Join-buttonille. Valitse alhaalta JoinRoom();
+
+10
+
+- Luo uusi scene. Tästä tulee meidän varsinainen peliscene minne rakennetaan meidan peli. Nimeä esim Game
+- Muista lisätä build settinkeihin tämä Game-scene
+- 
+
+11
+
+Photon komponentit ja mistä prefab ladataan: 
